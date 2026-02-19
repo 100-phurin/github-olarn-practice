@@ -1,0 +1,83 @@
+name: Classroom Automation and Validation
+
+on:
+  push:
+    branches:
+      - main
+      - "feature/*"
+      - "conflict/*"
+      - "rebase/*"
+
+permissions:
+  contents: write
+
+jobs:
+  simulate-remote-collaborator:
+    # prevent infinite loop when bot pushes
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # --------------------------------
+      # Overwrite index.html
+      # --------------------------------
+      - name: Overwrite index.html
+        run: |
+          cat > index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <meta charset="UTF-8">
+              <title>Auto Updated</title>
+          </head>
+          <body>
+              <h1>INT142 Practice Repository</h1>
+              <p>This file was overwritten automatically by GitHub Actions.</p>
+              <p>Timestamp: __TIME__</p>
+          </body>
+          </html>
+          EOF
+          sed -i "s/__TIME__/$(date -u)/g" index.html
+
+      # --------------------------------
+      # Update COLLABORATORS.md
+      # --------------------------------
+      - name: Update collaborators
+        run: |
+          if [ ! -f COLLABORATORS.md ]; then
+            cat > COLLABORATORS.md << 'EOF'
+          # Collaborators
+
+          ## Owner
+          - Full Name: YOUR_NAME_HERE
+
+          ## Collaborator (Simulated)
+          - GitHub Actions Bot
+          - Role: Automated remote update
+          EOF
+          else
+            echo "" >> COLLABORATORS.md
+            echo "- Updated automatically at: $(date -u)" >> COLLABORATORS.md
+          fi
+
+      # --------------------------------
+      # Commit changes
+      # --------------------------------
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.html COLLABORATORS.md
+          git diff --cached --quiet && exit 0
+          git commit -m "auto: simulate remote collaborator update"
+
+      # --------------------------------
+      # Push back to repo
+      # --------------------------------
+      - name: Push changes
+        run: git push
