@@ -1,7 +1,7 @@
 # Collaborators
 
 ## Owner
-- Full Name: YOUR REAL NAME
+- Full Name: Phurin Ploysila
 
 ## Collaborator (Simulated)
 - GitHub Actions Bot
